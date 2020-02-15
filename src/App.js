@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react'
+import logo from './logo.svg'
+import './App.css'
 
 function App() {
-  const [speed_xy, setSpeedXY] = useState([0, -1, 0]);
-  const [speed, setSpeed] = useState(5);
-  const [length, setLength] = useState(10);
+  const [speed_xy, setSpeedXY] = useState([0, -1, 0])
+  const [speed, setSpeed] = useState(5)
+  const [length, setLength] = useState(10)
 
   const [my_worm_plot, setMyWormPlot] = useState(
     Array(1).fill("").map((x, i) => [0, 0, 0, 0, 0])
-  );
+  )
 
   const [food, setFood] = useState(
     Array(100).fill("").map(() => [
@@ -17,7 +17,7 @@ function App() {
       (Math.floor(Math.random() * 2300)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
       Math.floor(Math.random() * 10)
     ])
-  );
+  )
 
   const [style, setStyle] = useState({
     main: {
@@ -90,7 +90,7 @@ function App() {
       fontSize: "calc(10px + 1vw)",
       backgroundColor: "rgba(0,0,0,0.7)",
     }
-  });
+  })
 
   useEffect(() => {
     setInterval(() => {
@@ -139,15 +139,18 @@ function App() {
         })
         return length
       })
-    }, 10);
-    document.addEventListener('mousemove', (e) => {
+    }, 10)
+    let on_move = (e, clientX, clientY) => {
       setSpeedXY(speed_xy => {
-        let x = e.clientX - (e.view.innerWidth / 2)
-        let y = e.clientY - (e.view.innerHeight / 2)
+        let x = clientX - (e.view.innerWidth / 2)
+        let y = clientY - (e.view.innerHeight / 2)
         let speed_x = speed_xy[0]
         let speed_y = speed_xy[1]
-        let new_angle = Math.atan2(x, y) * (180 / Math.PI)
+        let new_angle = (Math.atan2(x, y) * (180 / Math.PI))
         if (new_angle != speed_xy[2]) {
+          // if (Math.absolute(new_angle) > 175) {
+
+          // }
           speed_x = Math.sin((Math.PI / 180) * new_angle)
           speed_y = Math.cos((Math.PI / 180) * new_angle)
           speed_x = speed_x > 1 ? 0 : speed_x
@@ -155,6 +158,13 @@ function App() {
         }
         return [speed_x, speed_y, new_angle]
       })
+    }
+    document.addEventListener('mousemove', (e) => {
+      on_move(e, e.clientX, e.clientY)
+    })
+    document.addEventListener('touchmove', (e) => {
+      e.preventDefault()
+      on_move(e, e.touches[0].clientX, e.touches[0].clientY)
     })
   }, [])
 
@@ -236,7 +246,7 @@ function App() {
 
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
