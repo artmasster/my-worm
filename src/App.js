@@ -5,6 +5,7 @@ import './App.css'
 function App() {
   const [speed_xy, setSpeedXY] = useState([0, -1, 0])
   const [speed, setSpeed] = useState(5)
+  const [angle, setAngle] = useState(0)
   const [length, setLength] = useState(10)
 
   const [my_worm_plot, setMyWormPlot] = useState(
@@ -12,9 +13,9 @@ function App() {
   )
 
   const [food, setFood] = useState(
-    Array(100).fill("").map(() => [
-      (Math.floor(Math.random() * 2300)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
-      (Math.floor(Math.random() * 2300)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+    Array(500).fill("").map(() => [
+      (Math.floor(Math.random() * 2495)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+      (Math.floor(Math.random() * 2495)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
       Math.floor(Math.random() * 10)
     ])
   )
@@ -94,77 +95,86 @@ function App() {
 
   useEffect(() => {
     setInterval(() => {
-      setLength(length => {
-        setSpeedXY(speed_xy => {
-          setMyWormPlot(my_worm_plot => {
-            let new_plot_x = my_worm_plot[0][0] + speed_xy[0] * speed
-            let new_plot_y = my_worm_plot[0][1] + speed_xy[1] * speed
-            if (new_plot_x > 2500 || new_plot_x < -2500 || new_plot_y > 2500 || new_plot_y < -2500) {
-              alert("you die!")
-              setLength(10)
-              setFood(
-                Array(100).fill("").map(() => [
-                  (Math.floor(Math.random() * 2000)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
-                  (Math.floor(Math.random() * 2000)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
-                  Math.floor(Math.random() * 10)
-                ])
-              )
-              return Array(1).fill("").map((x, i) => [0, 0, 0, 0, 0])
-            } else {
-              setFood(food => {
-                let food_count = food.length
-                food = food.filter(f =>
-                  !(
-                    f[0] > new_plot_x - (50 + (length / 2)) &&
-                    f[0] < new_plot_x + (50 + (length / 2)) &&
-                    f[1] > new_plot_y - (50 + (length / 2)) &&
-                    f[1] < new_plot_y + (50 + (length / 2))
-                  )
-                )
-                if (food_count > food.length) {
-                  setLength(length => length + (food_count - food.length) * 1)
-                }
-                return food
-              })
-              return [[
-                new_plot_x, // X
-                new_plot_y,  // Y
-                speed_xy[0], // X direction
-                speed_xy[1],  // Y direction
-                speed_xy[2],
-              ]].concat(my_worm_plot).splice(0, length)
-            }
-          })
-          return speed_xy
-        })
-        return length
-      })
-    }, 10)
-    let on_move = (e, clientX, clientY) => {
       setSpeedXY(speed_xy => {
-        let x = clientX - (e.view.innerWidth / 2)
-        let y = clientY - (e.view.innerHeight / 2)
         let speed_x = speed_xy[0]
         let speed_y = speed_xy[1]
-        let new_angle = (Math.atan2(x, y) * (180 / Math.PI))
-        if (new_angle != speed_xy[2]) {
-          // if (Math.absolute(new_angle) > 175) {
-
-          // }
-          speed_x = Math.sin((Math.PI / 180) * new_angle)
-          speed_y = Math.cos((Math.PI / 180) * new_angle)
-          speed_x = speed_x > 1 ? 0 : speed_x
-          speed_y = speed_y > 1 ? 0 : speed_y
-        }
-        return [speed_x, speed_y, new_angle]
+        setAngle(angle => {
+          let new_angle = angle
+          console.log(new_angle, speed_xy[2], Math.abs(new_angle - speed_xy[2]), Math.abs(new_angle - speed_xy[2]) > 180);
+          if (new_angle != speed_xy[2]) {
+            if (new_angle > 175 && speed_xy[2] - 5 <= -180 || (new_angle < -175 && speed_xy[2] + 5 >= 180)) {
+              // do not thing
+            } else if (new_angle < speed_xy[2] - 5) {
+              new_angle = speed_xy[2] + (Math.abs(new_angle - speed_xy[2]) > 180 ? +5 : -5)
+            } else if (new_angle > speed_xy[2] + 5) {
+              new_angle = speed_xy[2] + (Math.abs(new_angle - speed_xy[2]) > 180 ? -5 : +5)
+            }
+            if (new_angle > 180) new_angle -= 360
+            if (new_angle < -180) new_angle += 360
+            speed_x = Math.sin((Math.PI / 180) * new_angle)
+            speed_y = Math.cos((Math.PI / 180) * new_angle)
+            speed_x = speed_x > 1 ? 0 : speed_x
+            speed_y = speed_y > 1 ? 0 : speed_y
+          }
+          setSpeedXY([speed_x, speed_y, new_angle])
+          setLength(length => {
+            setMyWormPlot(my_worm_plot => {
+              let new_plot_x = my_worm_plot[0][0] + speed_x * speed
+              let new_plot_y = my_worm_plot[0][1] + speed_y * speed
+              if (new_plot_x > 2500 || new_plot_x < -2500 || new_plot_y > 2500 || new_plot_y < -2500) {
+                alert("you die!")
+                setLength(10)
+                setFood(
+                  Array(500).fill("").map(() => [
+                    (Math.floor(Math.random() * 2495)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+                    (Math.floor(Math.random() * 2495)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+                    Math.floor(Math.random() * 10)
+                  ])
+                )
+                return Array(1).fill("").map((x, i) => [0, 0, 0, 0, 0])
+              } else {
+                setFood(food => {
+                  let food_count = food.length
+                  food = food.filter(f =>
+                    !(
+                      f[0] > new_plot_x - (50 + (length / 10)) &&
+                      f[0] < new_plot_x + (50 + (length / 10)) &&
+                      f[1] > new_plot_y - (50 + (length / 10)) &&
+                      f[1] < new_plot_y + (50 + (length / 10))
+                    )
+                  )
+                  if (food_count > food.length) {
+                    setLength(length => length + (food_count - food.length) * 1)
+                  }
+                  return [...food, ...
+                    Array(food_count - food.length).fill("").map(() => [
+                      (Math.floor(Math.random() * 1500)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+                      (Math.floor(Math.random() * 1500)) * (Math.floor(Math.random() * 1.5) ? 1 : -1),
+                      Math.floor(Math.random() * 10)
+                    ])]
+                })
+                return [[
+                  new_plot_x, // X
+                  new_plot_y,  // Y
+                  speed_x, // X direction
+                  speed_y,  // Y direction
+                  new_angle,
+                ]].concat(my_worm_plot).splice(0, length)
+              }
+            })
+            return length
+          })
+          return angle
+        })
+        return speed_xy
       })
-    }
+    }, 10)
     document.addEventListener('mousemove', (e) => {
-      on_move(e, e.clientX, e.clientY)
+      setAngle((Math.atan2(e.clientX - (e.view.innerWidth / 2), e.clientY - (e.view.innerHeight / 2)) * (180 / Math.PI)))
     })
     document.addEventListener('touchmove', (e) => {
       e.preventDefault()
-      on_move(e, e.touches[0].clientX, e.touches[0].clientY)
+      setAngle((Math.atan2(e.touches[0].clientX - (e.view.innerWidth / 2), e.touches[0].clientY - (e.view.innerHeight / 2)) * (180 / Math.PI)))
     })
   }, [])
 
@@ -187,14 +197,14 @@ function App() {
         {/* FOOD */}
         {
           food
-            // .filter(f =>
-            //   !(
-            //     f[0] - my_worm_plot[0][0] > 1500 ||
-            //     f[0] - my_worm_plot[0][0] < -1500 ||
-            //     f[1] - my_worm_plot[0][1] > 1000 ||
-            //     f[1] - my_worm_plot[0][1] < -1000
-            //   )
-            // )
+            .filter(f =>
+              !(
+                f[0] - my_worm_plot[0][0] > 50 + (window.innerWidth / 2) ||
+                f[0] - my_worm_plot[0][0] < -50 + (window.innerWidth / 2 * -1) ||
+                f[1] - my_worm_plot[0][1] > 50 + (window.innerHeight / 2) ||
+                f[1] - my_worm_plot[0][1] < -50 + (window.innerHeight / 2 * -1)
+              )
+            )
             .map((f, i) =>
               <img key={`f${i}`} src="/images/cookie.png"
                 style={{
@@ -223,10 +233,10 @@ function App() {
                 ...style.worm.body,
                 left: `calc(50% + ${mw[0]}px)`,
                 top: `calc(50% + ${mw[1]}px)`,
-                width: `${45 + (length / 2)}px`,
-                height: `${45 + (length / 2)}px`,
+                width: `${50 + (length / 10)}px`,
+                height: `${50 + (length / 10)}px`,
                 transform: `translate(-50%, -50%) rotate(${mw[4] * -1}deg)`,
-                boxShadow: `0 0 ${10 + (length / 10)}px #0ee`,
+                boxShadow: `0 0 ${10 + (length / 50)}px #0ee`,
                 // backgroundImage: "url('/images/man01.jpg')",
                 // boxShadow: `inset ${mw[3] * 10 + (length / 10)}px ${mw[2] * 10 * -1 + (length / 10)}px ${5 + (length / 10)}px -${5 + (length / 10)}px rgba(0,0,0,0.2),inset ${mw[3] * 10 * -1}px ${mw[2] * 10}px ${5 + (length / 10)}px -${5 + (length / 10)}px rgba(0,0,0,0.2), 0 0 ${10 + length / 10}px #0ee`,
               }}></div>
@@ -236,8 +246,8 @@ function App() {
         {/* FACE */}
         <img src="/images/face.png" style={{
           ...style.face,
-          width: `${40 + (length / 2)}px`,
-          height: `${40 + (length / 2)}px`,
+          width: `${(50 + (length / 10)) * 0.9}px`,
+          height: `${(50 + (length / 10)) * 0.9}px`,
           transform: `translate(-50%, -50%) rotate(${my_worm_plot[0][4] * -1}deg)`,
         }} />
 
